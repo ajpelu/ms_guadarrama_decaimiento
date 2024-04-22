@@ -1,0 +1,285 @@
+---
+title: "Temporal analysis of IV"
+format: html
+editor_options: 
+  chunk_output_type: console
+---
+
+## Aims
+
+## Prepare Data 
+
+```{r}
+library(tidyverse)
+```
+
+```{r}
+raw_landsat <- read_csv("data/raw/guadarrama_pinaster_syl_landsat_c02.csv")
+raw_modis <- read_csv("data/raw/guadarrama_pinaster_syl_modis_mod13q1.csv")
+
+
+pixel_id <- read_csv("data/geoinfo/pixel_idtree.csv")
+```
+
+
+```{r}
+modis <- raw_modis |>
+  mutate(date = as.Date(str_replace_all(substr(`system:index`, 1, 10), "_", "-"),
+                        format = "%Y-%m-%d"),
+         evi = EVI*0.0001,
+         ndvi = NDVI*0.0001) |> 
+  dplyr::select(sp, status, date, evi, ndvi) |> 
+  unique() 
+
+
+df_modis <- modis |> 
+  pivot_longer(evi:ndvi, 
+               names_to = "iv", 
+               values_to = "value")
+
+df_modis_date <- df_modis |> 
+  mutate(year = lubridate::year(date)) |> 
+  group_by(sp, status, year, iv) |> 
+  summarise(mean = mean(value, na.rm = TRUE), 
+            sd = sd(value, na.rm = TRUE), 
+            se = sd/sqrt(length(value)),
+            cv = sd/mean*100,
+            n = length(value))
+
+
+df_modis_month <- df_modis_date |> 
+  mutate(month = lubridate::month(date), 
+         year = lubridate::year(date)) |> 
+  rename(value = mean) |> 
+  group_by(sp, status, year, iv) |> 
+  summarise(mean = mean(value, na.rm = TRUE), 
+            sd = sd(value, na.rm = TRUE), 
+            se = sd/sqrt(length(value)),
+            cv = sd/mean*100,
+            n = length(value))
+```
+
+
+```{r}
+df_modis_date |> 
+  filter(iv == "evi") |> 
+  ggplot(aes(x=year, y=mean, fill=status, colour=status, group=status)) +
+  geom_ribbon(aes(ymin = (mean - se), ymax=(mean+se)), colour=NA, alpha=.2) + 
+  geom_point() + 
+  geom_line() + 
+  facet_wrap(~sp, nrow = 1) +
+  theme_bw()
+```
+
+
+
+### Landsat 
+```{r}
+raw_landsat <- read_csv("data/raw/guadarrama_pinaster_syl_landsat_c02.csv") |> 
+  rename(evi = EVI, ndvi = NDVI) |>
+  mutate(date = as.Date(as.character(date), format="%Y%m%d")) |> 
+  mutate(date = as.Date(date, format = "%Y%m%d")) |> 
+  dplyr::select(evi, ndvi, date, sp, status, name) |> 
+  mutate(year = lubridate::year(date), 
+         month = lubridate::month(date)) 
+```
+
+- Generate landsat evi series 
+
+```{r}
+landsat_evi <- raw_landsat |> 
+  dplyr::select(-ndvi) |> 
+  filter(!is.na(evi)) |> 
+  rename(value=evi) |> 
+  mutate(iv="evi")
+
+landsat_evi_id <- landsat_evi |> inner_join(pixel_id) |> dplyr::select(-name, -pixel_sentinel, -pixel_modis)  
+
+
+  
+landsat_evi_yearly <- landsat_evi_id |> 
+  group_by(sp, status, year) |> 
+    summarise(mean = mean(value, na.rm = TRUE), 
+            sd = sd(value, na.rm = TRUE), 
+            se = sd/sqrt(length(value)),
+            n = length(value))
+
+colores_status <-  c("Decaimiento" = "red", 
+                     "Sanos" ="blue")
+
+plot_landsat_evi <- 
+  landsat_evi_yearly |> 
+  ggplot(aes(x = year, y = mean, fill=status, colour=status)) +
+  geom_line() +  
+  geom_ribbon(data=landsat_evi_yearly, 
+              aes(ymin = (mean - se), ymax=(mean+se)), colour=NA, alpha=.2) +
+  theme_bw() +
+  facet_wrap(~sp, nrow = 1) + 
+  scale_x_continuous(limits = c(1986, 2023), breaks = seq(1986,2023, by=4)) +
+  theme(
+    panel.grid = element_blank(), 
+    strip.text = element_text(face = "italic"),
+    strip.background = element_rect(fill = "white"),
+    legend.position = "bottom"
+  ) + 
+  ylab("Annual EVI (Landsat)") +
+  scale_fill_manual(values = colores_status)
+
+```
+
+
+```{r}
+landsat_ndvi <- raw_landsat |> 
+  dplyr::select(-evi) |> 
+  filter(!is.na(ndvi)) |> 
+  rename(value=ndvi) |> 
+  mutate(iv="ndvi")
+
+landsat_ndvi_id <- landsat_ndvi |> inner_join(pixel_id) |> dplyr::select(-name, -pixel_sentinel, -pixel_modis)  
+
+landsat_ndvi_yearly <- landsat_ndvi_id |> 
+  group_by(sp, status, year) |> 
+    summarise(mean = mean(value, na.rm = TRUE), 
+            sd = sd(value, na.rm = TRUE), 
+            se = sd/sqrt(length(value)),
+            n = length(value))
+
+colores_status <-  c("Decaimiento" = "red", 
+                     "Sanos" ="blue")
+
+plot_landsat_ndvi <- 
+  landsat_ndvi_yearly |> 
+  ggplot(aes(x = year, y = mean, fill=status, colour=status)) +
+  geom_line() +  
+  geom_ribbon(aes(ymin = (mean - se), ymax=(mean+se)), colour=NA, alpha=.2) +
+  theme_bw() +
+  facet_wrap(~sp, nrow = 1) + 
+  scale_x_continuous(limits = c(1986, 2023), breaks = seq(1986,2023, by=4)) +
+  theme(
+    panel.grid = element_blank(), 
+    strip.text = element_text(face = "italic"),
+    strip.background = element_rect(fill = "white"),
+    legend.position = "bottom"
+  ) + 
+  ylab("Annual NDVI (Landsat)") +
+  scale_fill_manual(values = colores_status)
+```
+
+
+
+```{r}
+#| eval: false
+#| echo: false
+
+#quitamos duplicados (mismo arbol en el mismo pixel) 
+landsat_unique <- raw_landsat |> 
+  dplyr::select(-name) |> 
+  unique() |> 
+  pivot_longer(evi:ndvi, names_to = "iv", values_to = "value")
+
+yearly_landsat <- landsat_unique |> 
+  group_by(sp, status, year, iv) |> 
+  summarise(mean = mean(value, na.rm = TRUE), 
+            sd = sd(value, na.rm = TRUE), 
+            se = sd/sqrt(length(value)),
+            n = length(value))
+  
+
+yearly_landsat |>
+  filter(iv == "evi") |> 
+  ggplot(aes(x = year, y = mean, fill=status, colour=status, group=status)) +
+  geom_ribbon(aes(ymin = (mean - se), ymax=(mean+se)), colour=NA, alpha=.2) + 
+  geom_line() +
+  geom_point() +
+  theme_bw() +
+    facet_wrap(~sp, nrow = 1) 
+
++
+  ylab("Annual EVI (Landast 30-m)") +
+  theme(
+    strip.background = element_blank(),
+    strip.text = element_text(hjust = 0, vjust = 1, margin = margin(-0.05, 0.8, 0, 0), 
+                              face = "italic"),
+    plot.background = element_rect(fill = "transparent"), 
+    legend.position = "bottom"
+  ) +
+    scale_colour_manual(values = colours_elev, name = "") +
+    scale_fill_manual(values = colours_elev, name="") + 
+  facet_wrap(~factor(sp_code, levels = c("halepensis", "pinaster", "nigra", "sylvestris")), nrow = 1) +
+  ggtitle("old")
+
+
+
+
+```
+
+
+### Sentinel 
+
+```{r}
+raw_sentinel <- read_csv("data/raw/guadarrama_pinaster_syl_sentinel_harmonized.csv") |> 
+  mutate(date = as.Date(as.character(substr(`system:index`, 1,8)), format="%Y%m%d")) |> 
+  mutate(year = lubridate::year(date), 
+         month = lubridate::month(date)) |> 
+  dplyr::select(-`system:index`,-`.geo`, -ele, -numero, -tipo) |> 
+  filter(!is.na(EVI)) |> 
+  janitor::clean_names()
+  
+
+sentinel <- raw_sentinel |> 
+  pivot_longer(evi:vig,  names_to = "iv", values_to = "value") 
+
+sentinel_date <-
+  sentinel |> 
+  filter(date > as.Date("2017-06-01")) |> 
+  mutate(date2 = as.Date(paste0(format(date, "%Y-%m"), "-01"), format = "%Y-%m-%d")) |> 
+  group_by(sp, status, date2, iv) |> 
+  summarise(mean = mean(value, na.rm = TRUE), 
+            sd = sd(value, na.rm = TRUE), 
+            se = sd/sqrt(length(value)),
+            n = length(value)) |> 
+  ungroup()
+  
+
+colores_status <-  c("Decaimiento" = "red", 
+                     "Sanos" ="blue")
+
+
+sentinel_date |> 
+  # filter(iv %in% c('savi','evi','ndvi','nbr')) |> 
+  filter(iv == "ndvi") |> 
+  ggplot(aes(x = date2, y = mean, fill=status, colour=status, group = status)) +
+  geom_line() +  
+  geom_ribbon(aes(ymin = (mean - se), ymax=(mean+se)), colour=NA, alpha=.2) +
+  theme_bw() +
+  facet_wrap(~sp, ncol=1) + theme(
+    panel.grid = element_blank(), 
+    strip.text = element_text(face = "italic"),
+    strip.background = element_rect(fill = "white"),
+    legend.position = "bottom"
+  ) + 
+  ylab("Annual NDVI (Sentinel)") +
+  scale_fill_manual(values = colores_status)
+
+
+sentinel_date |> 
+  # filter(iv %in% c('savi','evi','ndvi','nbr')) |> 
+  filter(iv == "savi") |> 
+  ggplot(aes(x = date2, y = mean, fill=status, colour=status, group = status)) +
+  geom_line() +  
+  geom_ribbon(aes(ymin = (mean - se), ymax=(mean+se)), colour=NA, alpha=.2) +
+  theme_bw() +
+  facet_wrap(~sp, ncol=1) + theme(
+    panel.grid = element_blank(), 
+    strip.text = element_text(face = "italic"),
+    strip.background = element_rect(fill = "white"),
+    legend.position = "bottom"
+  ) + 
+  ylab("Annual NDVI (Sentinel)") +
+  scale_fill_manual(values = colores_status)
+
+
+
+```
+
+
