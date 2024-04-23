@@ -10,6 +10,8 @@ website:
         text: Home
       - href: iv_temporal_series.qmd
         text: Temporal series analysis
+      - href: cummulative_precipitation.qmd
+        text: Cummulative precipitation
 
 format:
   html:

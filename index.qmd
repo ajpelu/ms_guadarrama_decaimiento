@@ -1,7 +1,27 @@
 ---
-title: "Temporal analysis of IV"
+title: "Forest mortality at Guadarrama National Park"
 ---
 
 
-This repository contains analysis of the spectral indices obtanied from Remote sensing of several stands forest at Guadarrama National Park. 
+This repository contains analysis for the study of several stands forests at Guadarrama National Park (Central Spain). 
+
+- [Temporal analysis of several spectral indices](iv_temporal_series.qmd) from Remote sensing of forest stands with contrasting healthy status
+
+- [Exploration of the cummulative precipitation](cummulative_precipitation.qmd) of the meteorological statios close to our study sites
+
+- [Spatial dashboard viewer](https://dendroinia.github.io/guadarrama_dec_spatial/) 
+
+
+# Authors
+
+- Guillermo Gea-Izquierdo  <a href="https://orcid.org/0000-0003-0148-3721" target="orcid.widget">
+<img alt="ORCID logo" src="https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png" width="16" height="16" /></a>
+- Darío Martín-Benito <a href="https://orcid.org/0000-0002-6738-3312" target="orcid.widget">
+<img alt="ORCID logo" src="https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png" width="16" height="16" /></a>
+
+- Ismael Aranda ...
+- [Antonio J. Pérez-Luque](https://github.com/ajpelu) <a href="https://orcid.org/0000-0002-1747-0469" target="orcid.widget">
+<img alt="ORCID logo" src="https://info.orcid.org/wp-content/uploads/2019/11/orcid_16x16.png" width="16" height="16" /></a>
+- ... 
+
 

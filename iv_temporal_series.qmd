@@ -3,6 +3,9 @@ title: "Temporal analysis of IV"
 format: 
   html:
     toc: true
+execute: 
+  warning: false
+  error: false
 editor_options: 
   chunk_output_type: console
 ---
@@ -22,15 +25,11 @@ editor_options:
 - We applied several filters to remove low quality data (avoid clouds, etc) 
 
 ```{r}
-#| warning: false
-#| message: false
 library(tidyverse)
 options(tidyverse.quiet = TRUE)
 ```
 
 ```{r}
-#| warning: false
-#| message: false
 raw_landsat <- read_csv("data/raw/guadarrama_pinaster_syl_landsat_c02.csv")
 raw_modis <- read_csv("data/raw/guadarrama_pinaster_syl_modis_mod13q1.csv")
 pixel_id <- read_csv("data/geoinfo/pixel_idtree.csv")
@@ -39,8 +38,6 @@ pixel_id <- read_csv("data/geoinfo/pixel_idtree.csv")
 
 ## Landsat 
 ```{r}
-#| warning: false
-#| message: false
 raw_landsat <- read_csv("data/raw/guadarrama_pinaster_syl_landsat_c02.csv") |> 
   rename(evi = EVI, ndvi = NDVI) |>
   mutate(date = as.Date(as.character(date), format="%Y%m%d")) |> 
@@ -52,8 +49,6 @@ raw_landsat <- read_csv("data/raw/guadarrama_pinaster_syl_landsat_c02.csv") |>
 
 ### EVI 
 ```{r}
-#| warning: false
-#| message: false
 landsat_evi <- raw_landsat |> 
   dplyr::select(-ndvi) |> 
   filter(!is.na(evi)) |> 
@@ -73,8 +68,8 @@ landsat_evi_yearly <- landsat_evi_id |>
 ```
 
 ```{r}
-#| warning: false
-#| message: false
+
+
 colores_status <-  c("Decaimiento" = "red", 
                      "Sanos" ="blue")
 
@@ -99,8 +94,8 @@ landsat_evi_yearly |>
 
 ### NDVI
 ```{r}
-#| warning: false
-#| message: false
+
+
 landsat_ndvi <- raw_landsat |> 
   dplyr::select(-evi) |> 
   filter(!is.na(ndvi)) |> 
@@ -118,8 +113,8 @@ landsat_ndvi_yearly <- landsat_ndvi_id |>
 ```
 
 ```{r}
-#| warning: false
-#| message: false
+
+
 landsat_ndvi_yearly |> 
   ggplot(aes(x = year, y = mean, fill=status, colour=status)) +
   geom_line() +  
@@ -191,8 +186,8 @@ yearly_landsat |>
 - see [this paper](https://www.mdpi.com/2072-4292/14/9/2028) for some indexes used 
 
 ```{r}
-#| warning: false
-#| message: false
+
+
 raw_sentinel <- read_csv("data/raw/guadarrama_pinaster_syl_sentinel_harmonized.csv") |> 
   mutate(date = as.Date(as.character(substr(`system:index`, 1,8)), format="%Y%m%d")) |> 
   mutate(year = lubridate::year(date), 
@@ -219,8 +214,8 @@ sentinel_date <-
 
 #### NDVI 
 ```{r}
-#| warning: false
-#| message: false
+
+
 #| fig-width: 10
 sentinel_date |> 
   # filter(iv %in% c('savi','evi','ndvi','nbr')) |> 
@@ -245,8 +240,8 @@ sentinel_date |>
 ```{r}
 #| echo: false
 #| eval: false
-#| warning: false
-#| message: false
+
+
 gg <- sentinel_date |> 
   dplyr::filter(date2 <= "2018-08-01") |> 
   # dplyr::filter(date2  "2018-02-01") |> 
@@ -265,8 +260,8 @@ ff <- sentinel |>
 #### EVI 
 
 ```{r}
-#| warning: false
-#| message: false
+
+
 #| fig-width: 10
 sentinel_date |> 
   # filter(iv %in% c('savi','evi','ndvi','nbr')) |> 
@@ -290,8 +285,8 @@ sentinel_date |>
 #### SAVI 
 
 ```{r}
-#| warning: false
-#| message: false
+
+
 #| fig-width: 10
 sentinel_date |> 
   # filter(iv %in% c('savi','evi','ndvi','nbr')) |> 
@@ -315,8 +310,8 @@ sentinel_date |>
 #### NBR 
 
 ```{r}
-#| warning: false
-#| message: false
+
+
 #| fig-width: 10
 sentinel_date |> 
   # filter(iv %in% c('savi','evi','ndvi','nbr')) |> 
@@ -340,8 +335,8 @@ sentinel_date |>
 
 ## MODIS 
 ```{r}
-#| warning: false
-#| message: false
+
+
 modis <- raw_modis |>
   mutate(date = as.Date(str_replace_all(substr(`system:index`, 1, 10), "_", "-"),
                         format = "%Y-%m-%d"),
@@ -368,8 +363,8 @@ df_modis_date <- df_modis |>
 
 
 ```{r}
-#| warning: false
-#| message: false
+
+
 #| fig-width: 8
 #| fig-height: 6
 colores_status <-  c("Decaimiento" = "red", 
@@ -397,8 +392,8 @@ df_modis_date |>
 
 
 ```{r}
-#| warning: false
-#| message: false
+
+
 #| fig-width: 10
 #| fig-height: 6
 
