@@ -1,0 +1,20 @@
+project:
+  type: website
+  output-dir: docs
+
+website:
+  title: Temporal analysis of Spectral index Valsain & Valdemaqueda
+  navbar:
+    left:
+      - href: index.qmd
+        text: Home
+      - href: iv_temporal_series.qmd
+        text: Temporal series analysis
+
+format:
+  html:
+    theme: yeti
+    css: styles.css
+    toc: true
+    code-fold: false
+    code-tools: true
