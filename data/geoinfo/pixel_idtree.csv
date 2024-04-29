@@ -1,4 +1,4 @@
-﻿sp,name,pixel_landsat,status,pixel_sentinel,pixel_modis
+sp,name,pixel_landsat,status,pixel_sentinel,pixel_modis
 Pinus sylvestris,S01,L1,Sanos,SE10,MO4
 Pinus sylvestris,S02,L1,Sanos,SE11,MO4
 Pinus sylvestris,S03,L2,Sanos,SE12,MO4
@@ -47,3 +47,11 @@ Pinus pinaster,M44,L20,Decaimiento,SE30,MO3
 Pinus pinaster,M45,L20,Decaimiento,SE30,MO3
 Pinus pinaster,M53,L21,Decaimiento,SE31,MO3
 Pinus pinaster,M54,L25,Decaimiento,SE37,MO3
+Pinus sylvestris,S103,L28,Sanos,S51,M12
+Pinus sylvestris,S104,L29,Sanos,S52,M12
+Pinus sylvestris,S105,L29,Sanos,S53,M12
+Pinus sylvestris,S165,L32,Sanos,S54,M12
+Pinus sylvestris,S107,L30,Sanos,S55,M12
+Pinus sylvestris,S208,L31,Sanos,S56,M11
+Pinus sylvestris,S211,L32,Sanos,S57,M11
+Pinus sylvestris,S96,L28,Sanos,S51,M12

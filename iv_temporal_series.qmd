@@ -44,20 +44,22 @@ raw_landsat <- read_csv("data/raw/guadarrama_pinaster_syl_landsat_c02.csv") |>
   mutate(date = as.Date(date, format = "%Y%m%d")) |> 
   dplyr::select(evi, ndvi, date, sp, status, name) |> 
   mutate(year = lubridate::year(date), 
-         month = lubridate::month(date)) 
+         month = lubridate::month(date)) |> 
+  dplyr::filter(!(name %in% c("S01", "S02", "S03", "S04", "S05", "S06")))
+
 ```
 
 ### EVI 
 ```{r}
+
 landsat_evi <- raw_landsat |> 
   dplyr::select(-ndvi) |> 
   filter(!is.na(evi)) |> 
   rename(value=evi) |> 
   mutate(iv="evi")
 
-landsat_evi_id <- landsat_evi |> inner_join(pixel_id) |> dplyr::select(-name, -pixel_sentinel, -pixel_modis)  
-
-
+landsat_evi_id <- landsat_evi |> inner_join(pixel_id) |> 
+  dplyr::select(-pixel_sentinel, -pixel_modis) 
   
 landsat_evi_yearly <- landsat_evi_id |> 
   group_by(sp, status, year) |> 
@@ -68,8 +70,7 @@ landsat_evi_yearly <- landsat_evi_id |>
 ```
 
 ```{r}
-
-
+#| fig-width: 10
 colores_status <-  c("Decaimiento" = "red", 
                      "Sanos" ="blue")
 
@@ -95,14 +96,14 @@ landsat_evi_yearly |>
 ### NDVI
 ```{r}
 
-
 landsat_ndvi <- raw_landsat |> 
   dplyr::select(-evi) |> 
   filter(!is.na(ndvi)) |> 
   rename(value=ndvi) |> 
   mutate(iv="ndvi")
 
-landsat_ndvi_id <- landsat_ndvi |> inner_join(pixel_id) |> dplyr::select(-name, -pixel_sentinel, -pixel_modis)  
+landsat_ndvi_id <- landsat_ndvi |> inner_join(pixel_id) |>
+    dplyr::select(-pixel_sentinel, -pixel_modis) 
 
 landsat_ndvi_yearly <- landsat_ndvi_id |> 
   group_by(sp, status, year) |> 
@@ -113,8 +114,7 @@ landsat_ndvi_yearly <- landsat_ndvi_id |>
 ```
 
 ```{r}
-
-
+#| fig-width: 10
 landsat_ndvi_yearly |> 
   ggplot(aes(x = year, y = mean, fill=status, colour=status)) +
   geom_line() +  
@@ -187,7 +187,6 @@ yearly_landsat |>
 
 ```{r}
 
-
 raw_sentinel <- read_csv("data/raw/guadarrama_pinaster_syl_sentinel_harmonized.csv") |> 
   mutate(date = as.Date(as.character(substr(`system:index`, 1,8)), format="%Y%m%d")) |> 
   mutate(year = lubridate::year(date), 
@@ -198,7 +197,8 @@ raw_sentinel <- read_csv("data/raw/guadarrama_pinaster_syl_sentinel_harmonized.c
   
 
 sentinel <- raw_sentinel |> 
-  pivot_longer(evi:vig,  names_to = "iv", values_to = "value") 
+  pivot_longer(evi:vig,  names_to = "iv", values_to = "value") |> 
+  dplyr::filter(!(name %in% c("S01", "S02", "S03", "S04", "S05", "S06")))
 
 sentinel_date <-
   sentinel |> 
@@ -214,12 +214,11 @@ sentinel_date <-
 
 #### NDVI 
 ```{r}
-
-
 #| fig-width: 10
 sentinel_date |> 
   # filter(iv %in% c('savi','evi','ndvi','nbr')) |> 
   filter(iv == "ndvi") |> 
+  filter(!(date2 == "2018-05-01" & sp == "Pinus sylvestris" & status == "Sanos")) |> 
   ggplot(aes(x = date2, y = mean, fill=status, colour=status, group = status)) +
   geom_line() +  
   geom_ribbon(aes(ymin = (mean - se), ymax=(mean+se)), colour=NA, alpha=.2) +
@@ -233,39 +232,19 @@ sentinel_date |>
   ylab("NDVI (Sentinel)") +
   scale_fill_manual(values = colores_status) +
   scale_x_date(date_breaks = "6 months", date_labels = "%Y-%m") +
-  xlab("Date")
+  xlab("Date") +
+  scale_y_continuous(breaks = c(0, 0.25,0.5,0.75))
 ```
-
-
-```{r}
-#| echo: false
-#| eval: false
-
-
-gg <- sentinel_date |> 
-  dplyr::filter(date2 <= "2018-08-01") |> 
-  # dplyr::filter(date2  "2018-02-01") |> 
-  filter(iv == "evi") |> 
-  filter(sp == "Pinus sylvestris")
-  
-
-ff <- sentinel |> 
-  dplyr::filter(date <= "2018-06-01") |> 
-  dplyr::filter(date >= "2018-04-01") |> 
-  filter(sp == "Pinus sylvestris") |> 
-  filter(iv == "nbr") 
-```
-
 
 #### EVI 
 
 ```{r}
-
-
 #| fig-width: 10
 sentinel_date |> 
   # filter(iv %in% c('savi','evi','ndvi','nbr')) |> 
   filter(iv == "evi") |> 
+  filter(!(date2 == "2019-11-01" & sp == "Pinus sylvestris" & status == "Sanos")) |> 
+  filter(!(date2 == "2018-05-01" & sp == "Pinus sylvestris" & status == "Decaimiento")) |> 
   ggplot(aes(x = date2, y = mean, fill=status, colour=status, group = status)) +
   geom_line() +  
   geom_ribbon(aes(ymin = (mean - se), ymax=(mean+se)), colour=NA, alpha=.2) +
@@ -282,15 +261,15 @@ sentinel_date |>
   xlab("Date")
 ```
 
-#### SAVI 
 
 ```{r}
-
-
 #| fig-width: 10
+#| eval: false
+#| echo: false
 sentinel_date |> 
   # filter(iv %in% c('savi','evi','ndvi','nbr')) |> 
   filter(iv == "savi") |> 
+    filter(!(date2 == "2019-11-01" & sp == "Pinus sylvestris" & status == "Sanos")) |> 
   ggplot(aes(x = date2, y = mean, fill=status, colour=status, group = status)) +
   geom_line() +  
   geom_ribbon(aes(ymin = (mean - se), ymax=(mean+se)), colour=NA, alpha=.2) +
@@ -310,12 +289,11 @@ sentinel_date |>
 #### NBR 
 
 ```{r}
-
-
 #| fig-width: 10
 sentinel_date |> 
   # filter(iv %in% c('savi','evi','ndvi','nbr')) |> 
   filter(iv == "nbr") |> 
+  filter(!(date2 == "2018-05-01" & sp == "Pinus sylvestris" & status == "Sanos")) |> 
   ggplot(aes(x = date2, y = mean, fill=status, colour=status, group = status)) +
   geom_line() +  
   geom_ribbon(aes(ymin = (mean - se), ymax=(mean+se)), colour=NA, alpha=.2) +
@@ -335,15 +313,16 @@ sentinel_date |>
 
 ## MODIS 
 ```{r}
-
-
 modis <- raw_modis |>
   mutate(date = as.Date(str_replace_all(substr(`system:index`, 1, 10), "_", "-"),
                         format = "%Y-%m-%d"),
          evi = EVI*0.0001,
          ndvi = NDVI*0.0001) |> 
+    dplyr::filter(!(name %in% c("S01", "S02", "S03", "S04", "S05", "S06"))) |> 
   dplyr::select(sp, status, date, evi, ndvi) |> 
-  unique() 
+  unique()
+
+
 
 
 df_modis <- modis |> 
@@ -363,8 +342,6 @@ df_modis_date <- df_modis |>
 
 
 ```{r}
-
-
 #| fig-width: 8
 #| fig-height: 6
 colores_status <-  c("Decaimiento" = "red", 
@@ -415,6 +392,29 @@ df_modis_date |>
   scale_fill_manual(values = colores_status) +
   scale_colour_manual(values = colores_status)
 ```
+
+
+```{r}
+#| echo: false
+sentinel_export <- 
+  sentinel_date |>  
+  filter(iv %in% c("evi", "ndvi", "nbr")) |> 
+  filter(!(iv == "ndvi" & date2 == "2018-05-01" & sp == "Pinus sylvestris" & status == "Sanos")) |> 
+  filter(!(iv == "evi" & date2 == "2018-05-01" & sp == "Pinus sylvestris" & status == "Decaimiento")) |> 
+  filter(!(iv == "evi" & date2 == "2019-11-01" & sp == "Pinus sylvestris" & status == "Sanos")) |> 
+  filter(!(iv == "nbr" & date2 == "2018-05-01" & sp == "Pinus sylvestris" & status == "Sanos")) |> 
+  dplyr::select(-n) 
+
+
+landsat_export <- bind_rows(
+  (landsat_ndvi_yearly |> mutate(iv = "ndvi")), 
+  (landsat_evi_yearly |> mutate(iv = "evi"))) |> 
+  dplyr::select(-n)
+  
+write_csv(sentinel_export, "output/sentinel_serie.csv")
+write_csv(landsat_export, "output/landsat_serie.csv")
+```
+
 
 
 
