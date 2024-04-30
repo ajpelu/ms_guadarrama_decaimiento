@@ -108,8 +108,6 @@ mk_evi_landsat <- landsat_evi_yearly |>
             across(mean, ~trend::sens.slope(.)$estimate, .names ="{.col}_senslope"),
             across(mean, ~trend::sens.slope(.)$p.value, .names ="{.col}_pvalue_sen")) 
 
-
-
 mk_evi_landsat |> 
   kbl(
     digits = c(0,0,3,5,5,4),
