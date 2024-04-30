@@ -26,6 +26,9 @@ editor_options:
 
 ```{r}
 library(tidyverse)
+library(Kendall)
+library(trend)
+library(kableExtra)
 options(tidyverse.quiet = TRUE)
 ```
 
@@ -93,6 +96,32 @@ landsat_evi_yearly |>
   scale_fill_manual(values = colores_status)
 ```
 
+- Temporal trend 
+
+```{r}
+#| echo: false
+mk_evi_landsat <- landsat_evi_yearly |> 
+  ungroup() |> 
+  group_by(sp, status) |> 
+  summarise(across(mean, ~MannKendall(.)$tau, .names ="{.col}_tau"),
+            across(mean, ~MannKendall(.)$sl, .names ="{.col}_pvalue_mk"),
+            across(mean, ~trend::sens.slope(.)$estimate, .names ="{.col}_senslope"),
+            across(mean, ~trend::sens.slope(.)$p.value, .names ="{.col}_pvalue_sen")) 
+
+
+
+mk_evi_landsat |> 
+  kbl(
+    digits = c(0,0,3,5,5,4),
+    caption = "Mann-Kendall and Seil temporal trend test for yearly EVI (Landsat)") |> 
+  column_spec(3:4, bold = ifelse(mk_evi_landsat$mean_pvalue_mk < 0.05, TRUE, FALSE)) |>
+  column_spec(1, italic = TRUE) |> 
+  collapse_rows(columns = 1:2) |> 
+  kable_paper("hover", full_width = F)
+```
+
+
+
 ### NDVI
 ```{r}
 
@@ -130,6 +159,29 @@ landsat_ndvi_yearly |>
   ) + 
   ylab("Annual NDVI (Landsat)") +
   scale_fill_manual(values = colores_status)
+```
+
+- Temporal trend 
+
+```{r}
+#| echo: false
+mk_ndvi_landsat <- landsat_ndvi_yearly |> 
+  ungroup() |> 
+  group_by(sp, status) |> 
+  summarise(across(mean, ~MannKendall(.)$tau, .names ="{.col}_tau"),
+            across(mean, ~MannKendall(.)$sl, .names ="{.col}_pvalue_mk"),
+            across(mean, ~trend::sens.slope(.)$estimate, .names ="{.col}_senslope"),
+            across(mean, ~trend::sens.slope(.)$p.value, .names ="{.col}_pvalue_sen")) 
+
+
+mk_ndvi_landsat |> 
+  kbl(
+    digits = c(0,0,3,5,5,4),
+    caption = "Mann-Kendall and Seil temporal trend test for yearly NDVI (Landsat)") |> 
+  column_spec(3:4, bold = ifelse(mk_ndvi_landsat$mean_pvalue_mk < 0.05, TRUE, FALSE)) |>
+  column_spec(1, italic = TRUE) |> 
+  collapse_rows(columns = 1:2) |> 
+  kable_paper("hover", full_width = F)
 ```
 
 
@@ -415,6 +467,6 @@ write_csv(sentinel_export, "output/sentinel_serie.csv")
 write_csv(landsat_export, "output/landsat_serie.csv")
 ```
 
-
+## Temporal trends of EVI 
 
 
